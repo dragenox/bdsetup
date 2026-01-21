@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+
+OMV_IP="$(hostname -I | awk '{print $1}')"
+
+require_root() {
+  [ "$(id -u)" -eq 0 ] || { echo "Run as root"; exit 1; }
+}
+
+check_omv_plugins() {
+  dpkg -l | grep -q openmediavault-apt || missing=1
+  dpkg -l | grep -q openmediavault-md || missing=1
+
+  if [ "$missing" = "1" ]; then
+    echo "Required OMV plugins missing."
+    echo "Install from: http://$OMV_IP/#/system/plugins"
+    exit 1
+  fi
+}
+
+list_disks() {
+  lsblk -dn -o NAME,SIZE,FSTYPE,TRAN
+}
+
+# placeholder for interactive selectors
+
+main() {
+  require_root
+  check_omv_plugins
+  list_disks
+  echo "Interactive setup continues..."
+}
+
+case "$1" in
+  "-snap") echo "SnapRAID setup mode";;
+  *) main;;
+esac
